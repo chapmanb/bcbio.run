@@ -20,8 +20,12 @@
 
 (facts "Manipulating file paths"
   (fsp/add-file-part "test.txt" "add") => "test-add.txt"
+  (fsp/add-file-part "test.txt.gz" "add") => "test-add.txt.gz"
   (fsp/add-file-part "/full/test.txt" "new") => "/full/test-new.txt"
   (fsp/file-root "/full/test.txt") => "/full/test"
   (fsp/remove-zip-ext "test.txt") => "test.txt"
   (fsp/remove-zip-ext "test.txt.gz") => "test.txt"
-  (fsp/remove-zip-ext "test.tar.gz") => "test")
+  (fsp/remove-zip-ext "test.tar.gz") => "test"
+  (fsp/split-ext+ "test.vcf.gz") => ["test" ".vcf.gz"]
+  (fsp/split-ext+ "/path/to/test.vcf.gz") => ["/path/to/test" ".vcf.gz"]
+  (fsp/split-ext+ "test.vcf") => ["test" ".vcf"])

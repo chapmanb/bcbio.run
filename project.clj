@@ -5,7 +5,8 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.codehaus.jsr166-mirror/jsr166y "1.7.0"] ;; reducers support for Java 1.6
                  [org.clojure/core.incubator "0.1.3"]
-                 [me.raynes/conch "0.5.0"]
+                 [amalloy/ring-buffer "1.0"]
+                 [com.taoensso/timbre "3.0.0-RC2"]
                  [me.raynes/fs "1.4.3"]]
   :plugins [[lein-midje "3.1.3"]]
   :profiles {:dev {:dependencies

@@ -5,11 +5,12 @@
    output file on a previous run, and leaving partially finished
    files in the case of premature termination."
   (:import [java.io File])
-  (:require [clojure.string :as string]
+  (:require [amalloy.ring-buffer :refer [ring-buffer]]
+            [clojure.string :as string]
             [clojure.java.io :as io]
             [clojure.core.strint :refer [<<]]
-            [me.raynes.conch.low-level :as conch]
-            [me.raynes.fs :as fs]))
+            [me.raynes.fs :as fs]
+            [taoensso.timbre :as timbre]))
 
 ;; ## Idempotent processing
 ;; avoid re-running when output files exist
@@ -105,21 +106,36 @@
 
 ;; ## Run external commands
 
+(defn- log-stdout
+  "Enable logging of stdout/stderr in real time."
+  [proc]
+  (let [stdout (->> (.getInputStream proc) java.io.InputStreamReader. java.io.BufferedReader. line-seq)]
+    (reduce (fn [acc line]
+              (timbre/info line)
+              (cons line acc))
+            (ring-buffer 100) stdout)))
+
 (defn check-run
   [cmd]
-  (let [proc (conch/proc "bash" "-c" (str "set -o pipefail; " cmd))]
-    (future (conch/stream-to-out proc :out))
-    (future (conch/stream-to-out proc :err))
-    (when-not (= 0 (conch/exit-code proc))
-      (throw (Exception. (format "Shell command failed: %s" cmd))))))
+  (timbre/set-config! [:timestamp-pattern] "yyyy-MM-dd HH:mm:ss")
+  (let [builder (-> (ProcessBuilder. (into-array String ["bash" "-c" (str "set -o pipefail; " cmd)]))
+                    (.redirectErrorStream true))
+        proc (.start builder)
+        stdout-handle (future (log-stdout proc))
+        exit-code (.waitFor proc)]
+    (when-not (= 0 exit-code)
+      (let [e (Exception. (format "Shell command failed: %s\n%s" cmd (string/join "\n" @stdout-handle)))]
+        (timbre/error e)
+        (throw e)))))
 
 (defmacro run-cmd
   "Run a command line producing the given output file in an idempotent transaction.
    Wraps all of the machinery around preparing a command line from local arguments.
    Ensures a single run and avoids partial output files."
   [out-file & cmd]
-  `(when (needs-run? ~out-file)
-     (with-tx-file [tx-out-file# ~out-file]
-       (let [fill-cmd# (<< ~@cmd)
-             tx-cmd# (string/replace fill-cmd# ~out-file tx-out-file#)]
-         (check-run tx-cmd#)))))
+  `(do (when (needs-run? ~out-file)
+         (with-tx-file [tx-out-file# ~out-file]
+           (let [fill-cmd# (<< ~@cmd)
+                 tx-cmd# (string/replace fill-cmd# ~out-file tx-out-file#)]
+             (check-run tx-cmd#))))
+       ~out-file))
