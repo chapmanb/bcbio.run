@@ -16,7 +16,7 @@
         [base ext2] (if (contains? #{".gz" ".bz2" ".zip"} ext)
                       (fs/split-ext base-o)
                       [base-o ""])]
-    [(str (io/file dir base)) (str ext2 ext)]))
+    [(if (empty? dir) base (str (io/file dir base))) (str ext2 ext)]))
 
 (defn file-root
   "Retrieve file name without extension: /path/to/fname.txt -> /path/to/fname"
