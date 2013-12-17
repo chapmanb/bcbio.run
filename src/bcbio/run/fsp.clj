@@ -11,13 +11,12 @@
 (defn split-ext+
   "Split extension, grouping zipped extensions with rest of file"
   [f]
-  (let [dir (let [d (str (fs/parent f))]
-              (if (.startsWith f d) (str d "/") ""))
+  (let [dir (str (.getParentFile (io/file f)))
         [base-o ext] (fs/split-ext f)
         [base ext2] (if (contains? #{".gz" ".bz2" ".zip"} ext)
                       (fs/split-ext base-o)
                       [base-o ""])]
-    [(str dir base) (str ext2 ext)]))
+    [(str (io/file dir base)) (str ext2 ext)]))
 
 (defn file-root
   "Retrieve file name without extension: /path/to/fname.txt -> /path/to/fname"

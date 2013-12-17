@@ -107,7 +107,8 @@
 ;; ## Run external commands
 
 (defn- log-stdout
-  "Enable logging of stdout/stderr in real time."
+  "Run through stdout/stderr output line by line, enabling logging.
+   Retains last 100 lines for debugging purposes in case of failed run."
   [proc]
   (let [stdout (->> (.getInputStream proc) java.io.InputStreamReader. java.io.BufferedReader. line-seq)]
     (reduce (fn [acc line]
@@ -116,6 +117,8 @@
             (ring-buffer 100) stdout)))
 
 (defn check-run
+  "Run a shell command, detection failures with non-zero exit codes.
+   Handles merged writing of stdout/stderr to log files"
   [cmd]
   (timbre/set-config! [:timestamp-pattern] "yyyy-MM-dd HH:mm:ss")
   (let [builder (-> (ProcessBuilder. (into-array String ["bash" "-c" (str "set -o pipefail; " cmd)]))
