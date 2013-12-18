@@ -116,20 +116,43 @@
               (cons line acc))
             (ring-buffer 100) stdout)))
 
+(defn- wrap-line [size text]
+  "Wrap lines using regular expressions: http://rosettacode.org/wiki/Word_wrap#Clojure"
+  (re-seq (re-pattern (str ".{0," size "} ")) (str text " ")))
+
+(defn- write-bash-script
+  "Write bash script from a command, line breaking for easier debugging if needed."
+  [cmd tmp-dir]
+  (let [run-file (str (io/file tmp-dir "run.sh"))
+        wrap-size (max 100 (apply max (map count (string/split cmd #" "))))]
+    (with-open [wtr (io/writer run-file)]
+      (.write wtr "set -o pipefail; \\\n")
+      (doseq [line (wrap-line wrap-size (string/escape cmd
+                                                       {\tab (char-escape-string \tab)}))]
+        (.write wtr (str line "\\\n"))))
+    run-file))
+
 (defn check-run
   "Run a shell command, detection failures with non-zero exit codes.
-   Handles merged writing of stdout/stderr to log files"
-  [cmd]
-  (timbre/set-config! [:timestamp-pattern] "yyyy-MM-dd HH:mm:ss")
-  (let [builder (-> (ProcessBuilder. (into-array String ["bash" "-c" (str "set -o pipefail; " cmd)]))
-                    (.redirectErrorStream true))
-        proc (.start builder)
-        stdout-handle (future (log-stdout proc))
-        exit-code (.waitFor proc)]
-    (when-not (= 0 exit-code)
-      (let [e (Exception. (format "Shell command failed: %s\n%s" cmd (string/join "\n" @stdout-handle)))]
-        (timbre/error e)
-        (throw e)))))
+   Handles merged writing of stdout/stderr to log files.
+   When passed a temporary directory writes commands to temporary bash
+   script to avoid line length restrictions."
+  ([cmd tmp-dir]
+     (timbre/set-config! [:timestamp-pattern] "yyyy-MM-dd HH:mm:ss")
+     (let [bash-cmd (if (nil? tmp-dir)
+                      ["bash" "-c" (str "set -o pipefail; " cmd)]
+                      ["bash" (write-bash-script cmd tmp-dir)])
+           builder (-> (ProcessBuilder. (into-array String bash-cmd))
+                       (.redirectErrorStream true))
+           proc (.start builder)
+           stdout-handle (future (log-stdout proc))
+           exit-code (.waitFor proc)]
+       (when-not (= 0 exit-code)
+         (let [e (Exception. (format "Shell command failed: %s\n%s" cmd (string/join "\n" @stdout-handle)))]
+           (timbre/error e)
+           (throw e)))))
+  ([cmd]
+     (check-run cmd nil)))
 
 (defmacro run-cmd
   "Run a command line producing the given output file in an idempotent transaction.
@@ -140,5 +163,5 @@
          (with-tx-file [tx-out-file# ~out-file]
            (let [fill-cmd# (<< ~@cmd)
                  tx-cmd# (string/replace fill-cmd# ~out-file tx-out-file#)]
-             (check-run tx-cmd#))))
+             (check-run tx-cmd# (fs/parent tx-out-file#)))))
        ~out-file))
