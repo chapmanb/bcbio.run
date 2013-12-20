@@ -73,7 +73,7 @@
   "Rename generated transaction files into expected file location."
   [tx-file-info file-info need-tx exts]
   (doseq [tx-key need-tx]
-    (let [tx-safe (get tx-file-info tx-key) 
+    (let [tx-safe (get tx-file-info tx-key)
           tx-final (get file-info tx-key)]
       (fs/rename tx-safe tx-final)
       (doseq [ext exts]
@@ -159,9 +159,10 @@
    Wraps all of the machinery around preparing a command line from local arguments.
    Ensures a single run and avoids partial output files."
   [out-file & cmd]
-  `(do (when (needs-run? ~out-file)
-         (with-tx-file [tx-out-file# ~out-file]
-           (let [fill-cmd# (<< ~@cmd)
-                 tx-cmd# (string/replace fill-cmd# ~out-file tx-out-file#)]
-             (check-run tx-cmd# (fs/parent tx-out-file#)))))
-       ~out-file))
+  `(let [out-file# (str ~out-file)]
+     (do (when (needs-run? out-file#)
+           (with-tx-file [tx-out-file# out-file#]
+             (let [fill-cmd# (<< ~@cmd)
+                   tx-cmd# (string/replace fill-cmd# out-file# tx-out-file#)]
+               (check-run tx-cmd# (fs/parent tx-out-file#)))))
+         out-file#)))
