@@ -124,7 +124,7 @@
   "Write bash script from a command, line breaking for easier debugging if needed."
   [cmd tmp-dir]
   (let [run-file (str (io/file tmp-dir "run.sh"))
-        wrap-size (max 100 (apply max (map count (string/split cmd #" "))))]
+        wrap-size (max 500 (apply max (map count (string/split cmd #" "))))]
     (with-open [wtr (io/writer run-file)]
       (.write wtr "set -o pipefail; \\\n")
       (doseq [line (wrap-line wrap-size (string/escape cmd
