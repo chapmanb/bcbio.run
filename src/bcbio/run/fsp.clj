@@ -74,8 +74,3 @@
   [d]
   (fs/mkdirs d)
   (str d))
-
-(defn up-to-date?
-  "Check file dates: want f1 to be more recent than file 2."
-  [f1 f2]
-  (>= (fs/mod-time f1) (fs/mod-time f2)))

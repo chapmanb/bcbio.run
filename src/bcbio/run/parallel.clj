@@ -1,6 +1,7 @@
 (ns bcbio.run.parallel
   "Utilities for running code in parallel."
-  (:require [clojure.core.reducers :as r]))
+  (:require [clojure.core.reducers :as r]
+            [taoensso.timbre :as timbre]))
 
 (defn rmap
   "Reducer based parallel map, with flexible core usage and chunking.
@@ -8,11 +9,15 @@
    https://groups.google.com/d/msg/clojure/asaLNnM9v74/-t-2ZlCN5P4J
    https://groups.google.com/d/msg/clojure/oWyDP1JGzwc/5oeYqEHHOTAJ"
   ([f coll cores chunk-size]
-     (if (= 1 cores)
-       (map f coll)
-       (do
-         (alter-var-root #'r/pool (constantly (future (java.util.concurrent.ForkJoinPool. (int cores)))))
-         (r/fold chunk-size r/cat r/append! (r/map f (vec coll))))))
+     (try
+       (if (= 1 cores)
+         (map f coll)
+         (do
+           (alter-var-root #'r/pool (constantly (future (java.util.concurrent.ForkJoinPool. (int cores)))))
+           (r/fold chunk-size r/cat r/append! (r/map f (vec coll)))))
+       (catch Exception e
+         (timbre/error e)
+         (throw e))))
   ([f coll cores]
      (rmap f coll cores 1))
   ([f coll]
