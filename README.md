@@ -4,6 +4,8 @@ Idempotent, transactional runs of external command line programs.
 
 ## Usage
 
+Use Clojars to get [the latest version of bcbio.run][https://clojars.org/bcbio.run].
+
 ## License
 
 The code is freely available under the [MIT license][l1].
