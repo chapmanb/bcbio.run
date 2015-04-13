@@ -20,8 +20,10 @@
 
 (defn file-root
   "Retrieve file name without extension: /path/to/fname.txt -> /path/to/fname"
-  [fname]
-  (first (split-ext+ fname)))
+  ([fname]
+   (first (split-ext+ fname)))
+  ([fname out-dir]
+   (str (io/file out-dir (fs/base-name (file-root fname))))))
 
 (defn add-file-part
   "Add file extender: base.txt -> base-part.txt"
@@ -66,7 +68,7 @@
   [f]
   (-> (io/file f)
       fs/expand-home
-      fs/absolute-path
+      fs/absolute
       str))
 
 (defn safe-mkdir
@@ -74,3 +76,10 @@
   [d]
   (fs/mkdirs d)
   (str d))
+
+(defn pog-reader
+  "Plain or gzip input reader."
+  [f]
+  (if (.endsWith f ".gz")
+    (io/reader (java.util.zip.GZIPInputStream. (io/input-stream f)))
+    (io/reader f)))

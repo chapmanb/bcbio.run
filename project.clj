@@ -1,4 +1,4 @@
-(defproject bcbio.run "0.0.1"
+(defproject bcbio.run "0.0.3"
   :description "Idempotent, transactional runs of external command line programs."
   :url "http://github.com/chapmanb/bcbio.run"
   :license {:name "MIT" :url "http://www.opensource.org/licenses/mit-license.html"}
@@ -7,7 +7,7 @@
                  [org.clojure/core.incubator "0.1.3"]
                  [amalloy/ring-buffer "1.0"]
                  [com.taoensso/timbre "3.0.0-RC2"]
-                 [me.raynes/fs "1.4.3"]]
+                 [me.raynes/fs "1.4.6"]]
   :plugins [[lein-midje "3.1.3"]]
   :profiles {:dev {:dependencies
                    [[midje "1.6.0"]]}})

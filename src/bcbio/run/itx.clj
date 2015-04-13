@@ -6,6 +6,7 @@
    files in the case of premature termination."
   (:import [java.io File])
   (:require [amalloy.ring-buffer :refer [ring-buffer]]
+            [bcbio.run.fsp :as fsp]
             [clojure.string :as string]
             [clojure.java.io :as io]
             [clojure.core.strint :refer [<<]]
@@ -57,6 +58,14 @@
        ~@body
        (finally
         (fs/delete-dir ~tmp-dir)))))
+
+(defmacro with-named-tempdir
+  "Provide a temporary directory with a specific name, removing on successful completion only"
+  [[tmp-dir dir-name] & body]
+  `(let [~tmp-dir (fsp/safe-mkdir ~dir-name)
+         out# (do ~@body)]
+     (fs/delete-dir ~tmp-dir)
+     out#))
 
 (defn safe-tx-files
   "Update file-info with need-tx files in a safe transaction directory."
