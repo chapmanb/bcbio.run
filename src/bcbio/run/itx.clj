@@ -113,6 +113,14 @@
        (finally
         (fs/delete-dir (fs/parent ~tx-file))))))
 
+(defn safe-copy
+  "Perform a safe copy inside a transaction directory."
+  [orig-file out-file]
+  (with-tx-file [tx-out-file out-file]
+    (do
+      (io/copy orig-file tx-out-file)
+      out-file)))
+
 ;; ## Run external commands
 
 (defn- log-stdout

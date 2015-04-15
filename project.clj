@@ -1,4 +1,4 @@
-(defproject bcbio.run "0.0.3"
+(defproject bcbio.run "0.0.4"
   :description "Idempotent, transactional runs of external command line programs."
   :url "http://github.com/chapmanb/bcbio.run"
   :license {:name "MIT" :url "http://www.opensource.org/licenses/mit-license.html"}
