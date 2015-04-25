@@ -1,8 +1,8 @@
-(defproject bcbio.run "0.0.4"
+(defproject bcbio.run "0.0.5"
   :description "Idempotent, transactional runs of external command line programs."
   :url "http://github.com/chapmanb/bcbio.run"
   :license {:name "MIT" :url "http://www.opensource.org/licenses/mit-license.html"}
-  :dependencies [[org.clojure/clojure "1.5.1"]
+  :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.codehaus.jsr166-mirror/jsr166y "1.7.0"] ;; reducers support for Java 1.6
                  [org.clojure/core.incubator "0.1.3"]
                  [amalloy/ring-buffer "1.0"]

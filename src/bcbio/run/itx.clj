@@ -118,8 +118,8 @@
   [orig-file out-file]
   (with-tx-file [tx-out-file out-file]
     (do
-      (io/copy orig-file tx-out-file)
-      out-file)))
+      (io/copy (io/file orig-file) (io/file tx-out-file))
+      (str out-file))))
 
 ;; ## Run external commands
 
