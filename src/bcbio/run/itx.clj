@@ -155,7 +155,7 @@
    When passed a temporary directory writes commands to temporary bash
    script to avoid line length restrictions."
   ([cmd tmp-dir]
-     (timbre/set-config! [:timestamp-pattern] "yyyy-MM-dd HH:mm:ss")
+     (timbre/set-config! [:timestamp-pattern "yyyy-MM-dd HH:mm:ss"])
      (let [bash-cmd (if (nil? tmp-dir)
                       ["bash" "-c" (str "set -o pipefail; " cmd)]
                       ["bash" (write-bash-script cmd tmp-dir)])
